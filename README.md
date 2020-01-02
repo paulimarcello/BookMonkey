@@ -1,6 +1,9 @@
 ## _init project_   
-ng new BookMonkey -p bm   
--p for prefix
+```bash
+ng new BookMonkey -p bm #-p for prefix
+ng generate interface shared/book
+ng g c book-list
+```
 
 ## schlankes semantic ui installieren (nur css)   
 ```bash
