@@ -103,6 +103,11 @@ Daten werden an ein DOM-element übermittelt
                .- setze Property myProp der Komponente my-component
 <my-component [myProp]="foo">
                         '- auf den Wert der eigenen Property foo
+
+<element [property]="expression"></element>     <!-- expression wird ausgewertet -->
+<element property="value"></element>            <!-- string wird geschrieben -->
+<element property="{{ expression }}"></element> <!-- expression wird ausgewertet -->
+<element [property]="'value'"></element>        <!-- string wird geschrieben -->
 ```
 
 ### (Event Bindings)
@@ -153,7 +158,7 @@ odd: wahr, wenn der Index ungerade ist
 </div>
 ```
 
-### [Attribuatdirektiven]
+### [Attributdirektiven]
 Steuern das innere Verhalten des Elements.   
 Kann auf 2 Arten verwendet werden.
 
@@ -175,4 +180,23 @@ Pipes können bei der _Interpolation_ und beim _Property-Binding_ verwendet werd
 ```html
 <p> {{ name | lowercase }} </p>
 <p> {{ name | date | uppercase }} </p>
+```
+
+### Auslesen von DOM-Properties in Komponenten
+Hier lesen wir die DOM-Eigenschaft 'myProperty' aus.
+```html
+<my-component [myProperty]="'foo'"></my-component>
+```
+```typescript
+@Component({
+    selector: 'my-component',
+    templateUrl: './my.component.html'
+})
+export class MyComponent {
+    @Input() myProperty: string; // DOM-Property wird mit der Komponenten-Property verknüpft. Namen sollten identisch sein
+    @Input('nameOfDomPropertyToBind') myProp: string; // wenn Namen nicht identisch sind
+
+    
+    constructor() {}
+}
 ```
