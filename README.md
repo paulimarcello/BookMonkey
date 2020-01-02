@@ -199,12 +199,11 @@ export class MyComponent {
     @Input() myProperty: string; // DOM-Property wird mit der Komponenten-Property verknüpft. Namen sollten identisch sein
     @Input('nameOfDomPropertyToBind') myProp: string; // wenn Namen nicht identisch sind
 
-    
     constructor() {}
 }
 ```
 
-### der <ng-container>
+### der ng-container
 wenn wir mal kein DOM-Element benötigen
 ```html
 <span *ngFor="let item of ['a', 'b', 'c']">
@@ -221,3 +220,45 @@ wenn wir mal kein DOM-Element benötigen
     abc
 -->
 ```
+
+---
+
+### Services
+
+```typescript
+@Injectable()
+export class MyService {
+    constructor(private myDep: MyDependency) {}
+}
+```
+
+#### Abhängigkeiten explizit registrieren mit Providers
+Der Service wird in einem Modul registriert. Dafür bietet der Decorator die Eigenschaft providers an.   
+Klassen, die auf diese Weise registriert werden, können von anderen Klassen über den Konstruktor angefordert werden.   
+
+_Problem:_   
+Services, die zwar in einem Modul registriert, von der Anwendung jedoch niemals angefordert (also benutzt) wird, können nicht
+heraus-gebundled werden.
+```typescript
+@NgModule({
+    declarations:   [AppComponent],
+    imports:        [BrowserModule],
+    providers:      [MyService],
+    bootstrap:      [AppComponent]
+})
+export class AppModule {}
+```
+
+#### Tree-shakable Providers mit prividedIn
+Die Idee ist, die Importbeziehung zwischen Service und Modul umzukehren. Der Service wird nicht mehr explizit im Modul
+registriert, sondern meldet sich eigenständig in einem Modul an.   
+Wird der Service von keiner Komponente angefordert, so besteht auch keine Referenz und damit würde dieser beim Build
+entfallen.
+ ```typescript
+@Injectable({
+    providedIn: 'root' // in welches Modul der Provider eingetragen werden soll 
+})
+ export class MyService {
+     constructor(private myDep: MyDependency) {}
+ }
+ ```
