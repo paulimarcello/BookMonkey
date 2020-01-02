@@ -119,7 +119,9 @@ Daten fließen aus dem Template in die Komponentenklasse
 <button (click)="myClickHandler()">Click me </button>
                  '- mit dieser Methode abfangen
 ```
-   
+Alle nativen DOM-Events können mit Event-Bindings abgefangen werden.   
+https://www.w3.org/TR/uievents/
+
 ### [(Two-Way Bindings)]
 Lese-Schreibende Operation   
 ```html
@@ -200,4 +202,22 @@ export class MyComponent {
     
     constructor() {}
 }
+```
+
+### der <ng-container>
+wenn wir mal kein DOM-Element benötigen
+```html
+<span *ngFor="let item of ['a', 'b', 'c']">
+    {{ item }}
+</span>
+<!--
+    <span>a</span><span>b</span><span>c</span>
+-->
+
+<ng-container *ngFor="let item of ['a', 'b', 'c']">
+    {{ item }}
+</ng-container>
+<!--
+    abc
+-->
 ```
