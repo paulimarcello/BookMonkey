@@ -3,6 +3,7 @@
 ng new BookMonkey -p bm #-p for prefix
 ng generate interface shared/book
 ng g c book-list
+ng g c book-list-item
 ```
 
 ## schlankes semantic ui installieren (nur css)   
