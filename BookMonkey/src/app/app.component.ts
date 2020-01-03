@@ -10,16 +10,4 @@ type ViewState = 'list' | 'details';
 })
 export class AppComponent {
   title = 'BookMonkey';
-  book: Book;
-  viewState: ViewState = 'list';
-
-  showList(): void {
-    this.viewState = 'list';
-    this.book = null;
-  }
-
-  showDetails(book: Book): void {
-    this.viewState = 'details';
-    this.book = book;
-  }
 }

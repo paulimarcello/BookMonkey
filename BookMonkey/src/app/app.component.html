@@ -1,14 +1,5 @@
-<bm-book-list
-  *ngIf="viewState === 'list'"
-  (showDetailsEvent) = "showDetails($event)"
-  >
-</bm-book-list>
-
-<bm-book-details
-  *ngIf="viewState === 'details'"
-  [book]="book"
-  (showListEvent) = "showList()"
-  >
-</bm-book-details>
-
+<div class="ui pointing menu">
+  <a class="item" routerLinkActive="active" routerLink="home">Home</a>
+  <a class="item" routerLinkActive="active" routerLink="books">Bücher</a>
+</div>
 <router-outlet></router-outlet>

@@ -2,7 +2,7 @@
     <bm-book-list-item
       *ngFor="let book of books"
       [book]="book"
-      (click)="showDetails(book)"
+      [routerLink]="['/books', book.isbn]"
       class="item">
     </bm-book-list-item>
 </div>
