@@ -222,6 +222,16 @@ wenn wir mal kein DOM-Element benötigen
 -->
 ```
 
+### ng-templates
+```html
+<div *ngIf="book; else loading">
+    <p>Wird nur gerendert, wenn true</p>
+</div>
+
+<ng-template #loading>
+  <div class="ui active centered inline loader"></div>
+</ng-template>
+```
 ---
 
 ## Services
