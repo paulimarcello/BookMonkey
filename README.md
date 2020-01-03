@@ -262,3 +262,68 @@ entfallen.
      constructor(private myDep: MyDependency) {}
  }
  ```
+
+#### Abhängigkeiten ersetzen
+Man kann in einem Modul die konkrete Implementierung austauschen.   
+... oder konkrete Werte auflösen   
+```typescript
+@NgModule({
+    //...
+    providers: [
+        { provide: MyService, useClass: MyOtherService },
+        { provide: MyConfigToken, useValue: 'xyz' },
+        { provide: BetterService,
+            useFactory: (otherDependency: OtherDependency) => { return new BetterService(otherDependency) },
+            deps: [OtherDependency] 
+        }   
+    ]
+})
+export class AppModule {}
+```
+
+#### Abhängigkeiten anfordern mit @Inject
+Wenn man Abhängigkeiten anfordert, die keine Typescript-Klassen darstellen
+```typescript
+@Component({/*...*/})
+export class SomeComponent {
+    constructor(@Inject('MyConfigToken') private token: string) {}
+}
+```
+
+#### InjectionToken
+Besser ist jedoch die Verwendung von InjectionToken
+```typescript
+// Tokens in einer eigenen Datei auslagern
+export const MY_CONFIG_TOKEN = new InjectionToken<string>('myConfig');
+
+@NgModule({
+    //...
+    providers: [
+        { provide: MY_CONFIG_TOKEN, useValue: '1234567890' }
+    ]
+})
+export class AppModule {}
+
+
+@Component({/*...*/})
+export class SomeComponent {
+    constructor(@Inject(MY_CONFIG_TOKEN) private token: string) {}
+}
+```
+
+#### Multiprovider
+Hier bekommt man ein Array mit allen registrierten Werten
+```typescript
+// Tokens in einer eigenen Datei auslagern
+export const MY_CONFIG_TOKEN = new InjectionToken<string>('myConfig');
+
+@NgModule({
+    //...
+    providers: [
+        { provide: MY_CONFIG_TOKEN, useValue: '123', multi: true },
+        { provide: MY_CONFIG_TOKEN, useValue: '456', multi: true },
+        { provide: MY_CONFIG_TOKEN, useValue: '789', multi: true }
+    ]
+})
+export class AppModule {}
+```
