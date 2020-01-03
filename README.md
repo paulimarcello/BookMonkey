@@ -402,7 +402,7 @@ const routes: Routes = [
 <a routerLink="/myPath/42">Link auf 42</a>
 <a [routerLink]="['/myPath', myData.Id]">Dynamische Id</a>
 ```
-Auslesen der Routeninformationen in einer Komponente.   
+#### Auslesen der Routeninformationen in einer Komponente.   
 ```typescript
 @Component({ /* ... */ })
 export class MyComponent implements OnInit {
@@ -432,6 +432,113 @@ export class MyComponent implements OnInit {
         this.route.paramMap.subscribe(
             paramMap => this.id = paramMap.get('id');        
         );
+    }
+}
+```
+
+#### Verschachtelung von Routen
+Routen:   
+/user
+/user/list
+/user/add
+/user/edit
+/books
+
+```typescript
+const routes: Routes = [
+    {
+        path: 'books',
+        component: BooksComponent    
+    },
+    {
+        path: 'user',
+        component: UserComponent,
+        children: [
+            {
+                path: 'list',
+                component: UserListComponent
+            },
+            {
+                path: 'add',
+                component: UserAddComponent
+            },
+            {
+                path: 'edit',
+                component: UserEditComponent
+            },
+        ]    
+    }
+]
+```
+```html
+<!-- von UserComponent zu UserListComponent -->
+<a routerLink="list">...</a>
+
+<!-- von UserListComponent zu BooksComponent -->
+<a routerLink="/books">...</a> oder
+<a routerLink="../../books">...</a>
+```
+
+#### Routenweiterleitung
+/user würde nicht funktionieren, da /user kein Blatt ist, sondern nur ein Zwischenknoten.   
+Man könnte entweder eine künstliche Komponente hinzufügen, oder besser redirecten.
+```typescript
+const routes: Routes = [
+    {
+        path: 'books',
+        component: BooksComponent    
+    },
+    {
+        path: 'user',
+        component: UserComponent,
+        children: [
+            {
+                path: '',
+                redirectTo: 'list',
+                pathMatch: 'full'
+            },
+            {
+                path: 'list',
+                component: UserListComponent
+            },
+            {
+                path: 'add',
+                component: UserAddComponent
+            },
+            {
+                path: 'edit',
+                component: UserEditComponent
+            },
+        ]    
+    }
+]
+```
+
+#### aktive Links stylen
+Zauberwort: __routerLinkActive__
+```html
+<a routerLink="/user" routerLinkActive="cssClassToApply">...</a>
+<a routerLink="/books" routerLinkActive="cssClassToApply1 cssClassToApply2">...</a>
+<a routerLink="/" [routerLinkActive]="['cls1', 'cls2']">...</a>
+
+<!-- funktioniert auch auf Elternelemente. Wird auf den Container angewandt, wenn eines der Kinder aktiv ist. -->
+<div routerLinkActive="cls1">
+    <a routerLink="/user">User</a>
+    <a routerLink="/books">Books</a>
+</div>
+```
+
+#### Route programmatisch wechseln
+```typescript
+@Component({ /* ... */ })
+export class MyComponent {
+    constructor(private router: Router) {}
+
+    changeTheRoute(){
+//                           .- Liste an Routen-Segmenten
+        this.router.navigate(['/user', 'list']);
+        // oder
+        this.router.navigateByUrl('/user/list');    
     }
 }
 ```
