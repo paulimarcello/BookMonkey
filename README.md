@@ -224,7 +224,7 @@ wenn wir mal kein DOM-Element benötigen
 
 ---
 
-### Services
+## Services
 
 ```typescript
 @Injectable()
@@ -233,7 +233,7 @@ export class MyService {
 }
 ```
 
-#### Abhängigkeiten explizit registrieren mit Providers
+### Abhängigkeiten explizit registrieren mit Providers
 Der Service wird in einem Modul registriert. Dafür bietet der Decorator die Eigenschaft providers an.   
 Klassen, die auf diese Weise registriert werden, können von anderen Klassen über den Konstruktor angefordert werden.   
 
@@ -250,7 +250,7 @@ heraus-gebundled werden.
 export class AppModule {}
 ```
 
-#### Tree-shakable Providers mit prividedIn
+### Tree-shakable Providers mit prividedIn
 Die Idee ist, die Importbeziehung zwischen Service und Modul umzukehren. Der Service wird nicht mehr explizit im Modul
 registriert, sondern meldet sich eigenständig in einem Modul an.   
 Wird der Service von keiner Komponente angefordert, so besteht auch keine Referenz und damit würde dieser beim Build
@@ -264,7 +264,7 @@ entfallen.
  }
  ```
 
-#### Abhängigkeiten ersetzen
+### Abhängigkeiten ersetzen
 Man kann in einem Modul die konkrete Implementierung austauschen.   
 ... oder konkrete Werte auflösen   
 ```typescript
@@ -282,7 +282,7 @@ Man kann in einem Modul die konkrete Implementierung austauschen.
 export class AppModule {}
 ```
 
-#### Abhängigkeiten anfordern mit @Inject
+### Abhängigkeiten anfordern mit @Inject
 Wenn man Abhängigkeiten anfordert, die keine Typescript-Klassen darstellen
 ```typescript
 @Component({/*...*/})
@@ -291,7 +291,7 @@ export class SomeComponent {
 }
 ```
 
-#### InjectionToken
+### InjectionToken
 Besser ist jedoch die Verwendung von InjectionToken
 ```typescript
 // Tokens in einer eigenen Datei auslagern
@@ -312,7 +312,7 @@ export class SomeComponent {
 }
 ```
 
-#### Multiprovider
+### Multiprovider
 Hier bekommt man ein Array mit allen registrierten Werten
 ```typescript
 // Tokens in einer eigenen Datei auslagern
@@ -331,7 +331,7 @@ export class AppModule {}
 
 ---
 
-### Routing
+## Routing
 Die URL beschreibt den Anwendungszustand, und für jeden Zustand wird angegeben, welche
 Komponenten geladen werden soll.
 
@@ -370,7 +370,7 @@ const routes: Routes = [
 export class AppRoutingModule { }
 ```
 
-#### Router-Outlet
+### Router-Outlet
 Zuvor konnten wir einfach den CSS-Selektor '<my-component>' nutzen, um eine Komponenten zu renden.
 Das haben wir quasi hart verdrahtet.   
 Durch das Routing werden die Komponenten aber nun dynamisch geladen, und zwar dahin, wo
@@ -380,7 +380,7 @@ Durch das Routing werden die Komponenten aber nun dynamisch geladen, und zwar da
 <router-outlet></router-outlet>
 ```
 
-#### Routen verlinken
+### Routen verlinken
 Die Nutzung von '<a href=...'> ist keine gute Idee, da der Browser bei einem normalen Link
 einen HTTP-Request absetzen würde. Das ist bei SPA nicht gewollt.   
 Daher RouterLink benutzen.   
@@ -389,7 +389,7 @@ Daher RouterLink benutzen.
 <a [routerLink]="['/second']">Zweiter Link</a><!-- besser, wenn Parameter dynamisch gefüllt werden müssen -->
 ```
 
-#### Routen Parameter
+### Routen Parameter
 ```typescript
 const routes: Routes = [
     { path: '', component: StartComponent, pathMatch: 'full' }, //wirklich nur dann, wenn / aufgerufen wird
@@ -402,7 +402,7 @@ const routes: Routes = [
 <a routerLink="/myPath/42">Link auf 42</a>
 <a [routerLink]="['/myPath', myData.Id]">Dynamische Id</a>
 ```
-#### Auslesen der Routeninformationen in einer Komponente.   
+### Auslesen der Routeninformationen in einer Komponente.   
 ```typescript
 @Component({ /* ... */ })
 export class MyComponent implements OnInit {
@@ -436,7 +436,7 @@ export class MyComponent implements OnInit {
 }
 ```
 
-#### Verschachtelung von Routen
+### Verschachtelung von Routen
 Routen:   
 /user
 /user/list
@@ -479,7 +479,7 @@ const routes: Routes = [
 <a routerLink="../../books">...</a>
 ```
 
-#### Routenweiterleitung
+### Routenweiterleitung
 /user würde nicht funktionieren, da /user kein Blatt ist, sondern nur ein Zwischenknoten.   
 Man könnte entweder eine künstliche Komponente hinzufügen, oder besser redirecten.
 ```typescript
@@ -514,7 +514,7 @@ const routes: Routes = [
 ]
 ```
 
-#### aktive Links stylen
+### aktive Links stylen
 Zauberwort: __routerLinkActive__
 ```html
 <a routerLink="/user" routerLinkActive="cssClassToApply">...</a>
@@ -528,7 +528,7 @@ Zauberwort: __routerLinkActive__
 </div>
 ```
 
-#### Route programmatisch wechseln
+### Route programmatisch wechseln
 ```typescript
 @Component({ /* ... */ })
 export class MyComponent {
@@ -542,3 +542,138 @@ export class MyComponent {
     }
 }
 ```
+
+---
+
+## HTTP und reactive Programming
+Um den HTTP-Client nutzen zu können muss dieser im Module importiert werden.   
+!!! Dieses Module darf nur einmal in der gesamten Anwendung importiert werden !!!
+```typescript
+@NgModule({
+    //...
+    imports: [
+        // ...
+        HttpClientModule
+    ]
+})
+export class AppModule { }
+```
+```typescript
+interface Item {
+    id: number;
+    name: string;
+}
+
+// wenn wir nur an den body interessiert sind
+@Component({ /* ... */ })
+export class MyComponent implements OnInit {
+    myItems: Item[];
+
+    constructor(private httpClient: HttpClient) { }
+
+    ngOnInit() {
+        this.httpClient.get<Item[]>('http://example.org/api/items')
+            .subscribe(items => this.myItems = items);
+    }
+}
+
+// wenn wir an den gesamten response interessiert sind
+@Component({ /* ... */ })
+export class MyComponent implements OnInit {
+    // status       -> Statuscode, z.B. 200
+    // statusText   -> Beschreibung des Codes, z.B. OK
+    // url          -> angefragte URL
+    // headers      -> Header der Antwort als Objekt
+    // body         -> Nutzdaten vom Typ Item[]
+    myResponse: HttpResponse<Item[]>;
+
+    constructor(private httpClient: HttpClient) { }
+
+    ngOnInit() {
+        this.httpClient
+            .get<Item[]>(
+                'http://example.org/api/items',
+                { observe: 'response' }
+            )
+            .subscribe(response => this.myResponse = response);
+    }
+}
+```
+
+### zusätzliche Header setzen
+```typescript
+@Component({ /* ... */ })
+export class MyComponent implements OnInit {
+    ngOnInit() {
+        const headers = new HttpHeaders({
+            'My-Header': 'my-header-value'
+        });
+    
+        this.httpClient
+            .get(
+                'http://example.org/api/items',
+                { headers }
+            )
+            .subscribe(response => console.log(response));
+    }
+}
+```
+
+### Query-Parameter übermitteln
+Grundsätzlich sparsam damit umgehen, da die Limits der URL-Länge browserunterschiedlich sind.   
+
+Erzeugt folgende URL:   
+http://example.org/api/items?orderBy=date&orderDirection=DESC&filter=Sucherbegriff1&filter=Suchbegriff2
+```typescript
+@Component({ /* ... */ })
+export class MyComponent implements OnInit {
+    ngOnInit() {
+        const baseParams = new HttpParams({
+            fromObject: {
+                orderBy: 'date',
+                orderDirection: 'ASC'
+            }        
+        });
+
+        // zusätzliche Parameter
+        const params = baseParams
+            .set('orderDirection', 'DESC') //überschreibt und gibt neues Objekt zurück
+            .append('filter', 'Suchbegriff1') // fügt hinzu und gibt neues Objekt zurück
+            .append('filter', 'Suchbegriff2')
+    
+        this.httpClient
+            .get(
+                'http://example.org/api/items',
+                { params }
+            )
+            .subscribe(response => console.log(response));
+    }
+}
+```
+
+### Antwort ohne JSON verarbeiten
+HttpClient geht default davon aus, dass alles in JSON geliefert wird.   
+Wenn nicht, dann muss der responseType gesetzt werden.   
+responseType = json | blob | text
+```typescript
+@Component({ /* ... */ })
+export class MyComponent implements OnInit {
+    constructor(private httpClient: HttpClient) { }
+
+    ngOnInit() {
+        this.httpClient
+            .get(
+                'http://example.org/foo.txt',
+                { responseType: 'text' }
+            )
+            .subscribe(response => console.log(response));
+
+
+        this.httpClient
+            .get(
+                'http://example.org/bar.jpg',
+                { responseType: 'blob' }
+            )
+            .subscribe(response => console.log(response));
+    }
+}
