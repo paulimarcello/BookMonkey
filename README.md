@@ -328,3 +328,110 @@ export const MY_CONFIG_TOKEN = new InjectionToken<string>('myConfig');
 })
 export class AppModule {}
 ```
+
+---
+
+### Routing
+Die URL beschreibt den Anwendungszustand, und für jeden Zustand wird angegeben, welche
+Komponenten geladen werden soll.
+
+__Routen konfigurieren:__   
+Wir weisen einem URL-Pfad eine zu ladende Komponente zu.   
+
+__Routing-Modul einbauen:__   
+Wir binden das Routing in unsere Anwendung ein.
+
+__Komponenten anzeigen:__   
+Festlegen, wo die Komponente in das Template geladen wird.
+
+```typescript
+// kein '/' voranstellen!
+{ path: 'myPath', component: MyComponent }
+```
+
+```typescript
+import { Routes } from '@angular/router';
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+
+const routes: Routes = [
+    { path: '', component: StartComponent, pathMatch: 'full' }, //wirklich nur dann, wenn / aufgerufen wird
+    { path: 'first', component: FirstComponent },
+    { path: 'second', component: SecondComponent }
+];
+
+@NgModule({
+//          .- mit dem Import machen wir die Schnittstelle zum AngularRouter verfügbar
+//          |            .- liefert ein Modul mit unseren initialisierten Routen 
+  imports: [RouterModule.forRoot(routes)],
+//          .- das erstellte Modul wird Verfügbar gemacht
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+```
+
+#### Router-Outlet
+Zuvor konnten wir einfach den CSS-Selektor '<my-component>' nutzen, um eine Komponenten zu renden.
+Das haben wir quasi hart verdrahtet.   
+Durch das Routing werden die Komponenten aber nun dynamisch geladen, und zwar dahin, wo
+'<router-outlet>' definiert wird.
+```html
+<h1>My App</h1>
+<router-outlet></router-outlet>
+```
+
+#### Routen verlinken
+Die Nutzung von '<a href=...'> ist keine gute Idee, da der Browser bei einem normalen Link
+einen HTTP-Request absetzen würde. Das ist bei SPA nicht gewollt.   
+Daher RouterLink benutzen.   
+```html
+<a routerLink="/first">Erster Link</a><!-- praktisch, wenn man wirklich nur einen String übergeben will -->
+<a [routerLink]="['/second']">Zweiter Link</a><!-- besser, wenn Parameter dynamisch gefüllt werden müssen -->
+```
+
+#### Routen Parameter
+```typescript
+const routes: Routes = [
+    { path: '', component: StartComponent, pathMatch: 'full' }, //wirklich nur dann, wenn / aufgerufen wird
+    { path: 'first', component: FirstComponent },
+    { path: 'second', component: SecondComponent },
+    { path: 'myPath/:id', component: MyComponent } //:id ist Parameter. Lässt sich nun aber nicht mehr ohne Parm aufrufen!
+];
+```
+```html
+<a routerLink="/myPath/42">Link auf 42</a>
+<a [routerLink]="['/myPath', myData.Id]">Dynamische Id</a>
+```
+Auslesen der Routeninformationen in einer Komponente.   
+```typescript
+@Component({ /* ... */ })
+export class MyComponent implements OnInit {
+    id: number;
+    
+//                             .- damit lässt sich der Zustand der aktuellen Routers abfragen
+    constructor(private route: ActivatedRoute) {}
+
+    ngOnInit() {
+//                                    .- liefert alle Parameter der aktiven Route
+        this.id = this.route.snapshot.paramMap.get('id');
+    }
+}
+```
+Schwachstelle: Wird die Komponente erneut mit anderen Parameters aufgerufen, so erfährt die Komponente nichts
+von den neuen Parametern, da die Komponente nicht neu instanziiert wird. Auch ngOnInit wird _nicht_ erneut
+aufgerufen.   
+Das Problem lässt sich nur mit Observables lösen.
+```typescript
+@Component({ /* ... */ })
+export class MyComponent implements OnInit {
+    id: number;
+    
+    constructor(private route: ActivatedRoute) {}
+
+    ngOnInit() {
+        this.route.paramMap.subscribe(
+            paramMap => this.id = paramMap.get('id');        
+        );
+    }
+}
+```
