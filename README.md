@@ -687,3 +687,89 @@ export class MyComponent implements OnInit {
             .subscribe(response => console.log(response));
     }
 }
+```
+
+---
+
+## Reactive Programming
+
+3 Arten von Ereignissen:   
+- ein neues Element trifft ein (next)
+- ein Fehler tritt auf (error)
+- der Datenstrom (Observable) ist planmäßig zu Ende (complete)
+
+### Ein Observable ist auch nur eine Funktion
+```typescript
+function observable(observer) {
+    setTimeout(() => {
+        observer.next(1)
+    }, 1000);
+
+    observer.next(2);
+    
+    setTimeout(() => {
+        observer.next(3);
+        observer.complete();
+    }, 2000);
+}
+
+const myObserver = {
+    next: value => console.log(`value: ${value}`),
+    error: err => console.log(`error: ${err}`),
+    complete: () => console.log('complete')
+};
+
+observable(myObserver);
+
+// 2 --- 1 --- 3
+```
+
+### Finnische Notation
+Es ist üblich ein Observable mit dem Suffix $ zu notieren.
+```typescript
+//                                           .- abonniert nur next
+const subscription = myObservable$.subscribe(value => console.log(value));
+
+subscription.unsubscribe();
+```
+
+### Observables erzeugen
+```typescript
+// über Konstruktor
+const myObservable$ = new Observable(observer => {
+    // producer function
+    observer.next(1);
+    observer.next(2);
+    observer.complete();
+});
+
+//             .- erst mit subscribe wird producer function aufgerufen
+myObservable$.subscribe(myObserver);
+
+
+// creation functions
+
+// erzeugt ein obervable und emmitiert unmittelbar die daten
+const observable1$ = of(1, 2, 3);
+
+// wenn die daten bereits als array vorliegen
+const data = [1, 2, 3];
+const observable2 = from(data);
+
+// und andere         ms                complete
+const timer1$ = timer(500);     // ----0|
+const timer2$ = timer(0, 500);  // 0----1----2----3----4----...
+const timer3$ = interval(500);  // ----0----1----2----3----...
+```
+
+### Operatoren
+```typescript
+const numbers$ = of(0, 1, 2, 3, 4);
+
+numbers$.pipe(
+    map(value => value * 3),
+    filter(value => value % 2 === 0),
+//  .- reduce                     .- seed
+    scan((acc, cur) => acc + cur, 0)
+);
+```
