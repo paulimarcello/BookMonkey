@@ -767,9 +767,41 @@ const timer3$ = interval(500);  // ----0----1----2----3----...
 const numbers$ = of(0, 1, 2, 3, 4);
 
 numbers$.pipe(
+    // Operatoren (aber eigentlich Funktionen)
     map(value => value * 3),
     filter(value => value % 2 === 0),
 //  .- reduce                     .- seed
     scan((acc, cur) => acc + cur, 0)
 );
+```
+
+### heisse und kalte Observables
+Default ist kalte Oberservables.   
+Kalte Observables führen ihre Producer-Funktion nur aus, wenn subscribe() aufgerufen wird. Für Jeden subscribe() wird
+die Producer-Funktion jedoch erneut ausgeführt.   
+Satenströme entstehen nur an, wenn es einen subscriber gibt.   
+Schlecht bei sideeffects. 
+
+Heisse Observables erzeugen Datenströme auch ohne einen Subscriber.   
+Der EventEmitter ist ein heisses Observable.   
+
+Von außen kann man nicht sehen, ob ein Observable kalt oder heiss ist.
+
+### Operator share() - kalte Observables in heisse umwandeln
+```typescript
+const numbers$ = new Observable(obs => {
+  console.log('---new---')
+  const data = [1,2,3];
+  data.forEach(n => obs.next(n));
+});
+
+numbers$.subscribe(n => console.log(n)); // erster Aufruf der Producer-Funktion
+numbers$.subscribe(n => console.log(n)); // zweiter Aufruf :-(
+
+console.log('---------------------');
+
+const sharedNumbers$ = numbers$.pipe(share());
+
+sharedNumbers$.subscribe(console.log); 
+sharedNumbers$.subscribe(console.log); // wird nicht ausgegeben, da er leider zu spät kam
 ```
