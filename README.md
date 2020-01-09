@@ -777,9 +777,9 @@ numbers$.pipe(
 
 ### heisse und kalte Observables
 Default ist kalte Oberservables.   
-Kalte Observables führen ihre Producer-Funktion nur aus, wenn subscribe() aufgerufen wird. Für Jeden subscribe() wird
+Kalte Observables führen ihre Producer-Funktion nur aus, wenn subscribe() aufgerufen wird. Für jeden subscribe() wird
 die Producer-Funktion jedoch erneut ausgeführt.   
-Satenströme entstehen nur an, wenn es einen subscriber gibt.   
+Datenströme entstehen nur an, wenn es einen subscriber gibt.   
 Schlecht bei sideeffects. 
 
 Heisse Observables erzeugen Datenströme auch ohne einen Subscriber.   
@@ -804,4 +804,120 @@ const sharedNumbers$ = numbers$.pipe(share());
 
 sharedNumbers$.subscribe(console.log); 
 sharedNumbers$.subscribe(console.log); // wird nicht ausgegeben, da er leider zu spät kam
+```
+
+### Multicasting mit Subjects
+Mit share() lassen sich Ereignisse aus externen Quellen nicht erzeugen, denn share() benötigt ein bereits vorhandenes Observable.   
+Das macht man dann mit Subjects (klassischer Eventbus).   
+Technisch ist ein Subject eine Kombination aus Observable und Observer.   
+
+Mit den 3 Observer-Funktionen kann man Daten von außen an das Subject zu übergeben.
+```typescript
+class Subject<T> extends Observable {
+    next(value?: T)         // Observer
+    error(err: any)
+    complete()
+    subscribe(/* ... */)    // Observable
+    pipe(/* ... */)
+}
+
+// ------------------------------------------------
+
+import { Subject } from 'rxjs';
+
+const mySubject$ = new Subject<string>();
+
+mySubject$.subscribe(v => console.log(v));
+
+mySubject$.next('Hallo');
+mySubject$.next('Hallo2');
+```
+
+### BehaviorSubjects
+Bei normalen Subjects bekommt man erst dann die Daten, nachdem man sich abonniert hat. Kommt man zu spät, bekommt man nix.   
+Um dieses "Problem" zu umgehen, gibt es BehaviorSubjects.   
+Diese benötigen bei der Erstellen immer einen Startwert. Das BehaviorSubject hält intern den aktuellen State.   
+Beim Aufruf von next() wird der vorherige State durch den neuen ersetzt.   
+Jeder neue Subscriber erhält also immer den aktuellen State.
+
+```typescript
+import { BehaviorSubject } from 'rxjs';
+
+const myBehaviorSubject$ = new BehaviorSubject<String>('initial');
+
+// erster Subscriber erhält intial state
+myBehaviorSubject$.subscribe(value => console.log(`subscriber 1: value ${value}`));
+
+// state ändern
+// Subscriber 1 bekommt die aktuellen state
+myBehaviorSubject$.next('123456');
+
+// neuer Subscriber, erhält den aktuellen state
+myBehaviorSubject$.subscribe(value => console.log(`subscriber 2: value ${value}`));
+```
+
+### ReplaySubject
+Das Replay-Subject geht einen Schritt weiter und puffert intern die letzten X Ereignisse.   
+Neue Subscriber erhaäten die letzten X Events.
+
+```typescript
+import { ReplaySubject } from 'rxjs';
+
+const myReplaySubject$ = new ReplaySubject<number>(5)
+
+myReplaySubject$.next(1);
+myReplaySubject$.next(2);
+myReplaySubject$.next(3);
+myReplaySubject$.next(4);
+myReplaySubject$.next(5);
+myReplaySubject$.next(6);
+
+// 2 3 4 5 6
+myReplaySubject$.subscribe(value => console.log(value));
+```
+
+### Memory Leaks
+Wir abonnieren eine Subscription innerhalb einer Angular-Component in OnInit. Die Subscription bleibt im Hintergrund auch dann noch erhalten, wenn die Component bereits zerstört wurde (User wechselt die Seite).   
+Schlimmer noch: Wird die Seite erneut aufgerufen, so wird eine weitere Subscription erzeugt.   
+Wir müssen also dafür sorgen, dass wenn eine Component zerstört wird, dass auch die Subscription beendet wird.
+```typescript
+@Component(/* ... */)
+export class MyComponent implements OnInit, OnDestroy {
+    private sub: Subscription;
+
+    ngOnInit() {
+        this.sub = myObservable$.subscribe(value => console.log(value));
+    }
+
+    ngOnDestroy() {
+        sub.unsubscribe();
+    }
+}
+```
+
+Dieser Weg funktioniert, ist aber umständlich, wenn wir mehrere Subject abonniert haben. (jede Subscription innerhalb von ngOnDestroy unsubsriben. Und bloß nicht vergessen!).   
+Etwas eleganter, wenn wir dazu den Operator takeUntil des Observables nutzen.
+```typescript
+@Component(/* ... */)
+export class MyComponent implements OnInit, OnDestroy {
+    private destroy$ = new Subject()
+
+    ngOnInit() {
+        myObservable1$
+            .pipe(
+                takeUntil(this.destroy$)
+            )
+            .subscribe(value => console.log(value));
+
+        myObservable2$
+            .pipe(
+                takeUntil(this.destroy$)
+            )
+            .subscribe(value => console.log(value));
+    }
+
+    ngOnDestroy() {
+        this.destroy$.next();
+    }
+}
 ```
