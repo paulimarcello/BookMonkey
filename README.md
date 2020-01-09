@@ -7,6 +7,7 @@ ng g c book-list-item
 ng g s shared/book-store
 ng g i shared/book-raw
 ng g class shared/book-factory
+ng g class shared/token-interceptor
 ```
 
 ## schlankes semantic ui installieren (nur css)   
@@ -1874,3 +1875,95 @@ _verschwenderisch_: Wir nehmen einen Teller, werfen den alter Teller weg und wid
 exhaustMap   
 Ignoriert alle Werte aus dem Quelldatenstrom, solange noch eine Subscription läuft. Erst wenn die Leitung wieder frei ist, werden neue eingehende Werte bearbeitet.   
 _bescheiden und ruhig_: Wir nehmen keine Teller vom Band, solange wir noch einen vor uns haben.
+
+---
+
+## Interceptopren
+Interceptoren sind eine Middleware für Http-Kommunikation.   
+Interceptopren lönnen für alle Http-Anfragen und Antworten ausgeführt und an globaler Stelle Entscheidungen und Umwandlungen vornehmen.   
+z.B. zum setzen zusätzlicher Header, oder weitere Funktionen ausführen.   
+- Sicherheitsfunktionen
+- setzen zusätzlicher Headerfelder, z.B. für Caching
+- Logging
+- Anzeige von Zustandsinformationen zum Request (Anfrage noch aktiv, oder nicht?)
+- globales Abfangen von Fehlern, z.B. mit retry() oder catchError()
+Grundsätzlich werden alle Interceptoren _vor_ dem Versenden eines Requests ausgeführt.   
+Beim Request von 1 .. n
+Beim Response von n .. 1
+
+Technisch ist ein Intercepot ein Service, der über DI in die Apop integriert wird (benötigt @Injectable).   
+Interceptoren werden immer explizit als Provider registriert.
+
+https://ryanchenkie.com/securing-angular-applications/
+
+```typescript
+//leerer Interceptor
+import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest } from '@angular/common/http';
+
+@Injectable()
+export class MyInterceptor implements HttpInterceptor {
+
+  // diese Funktion ist der Kern eines Interceptors
+  intercept(
+    request: HttpRequest<any>,    // request liegt als Observable vor
+    next: HttpHandler             // nächster Handler in der pipeline
+  ): Observable<HttpEvent<any>> {
+
+    // Http-Request verarbeiten
+    const response$ = next.handle(request);
+
+    return response$.pipe(
+      // Http-Response verarbeiten
+    )
+
+  }
+
+}
+```
+
+```typescript
+// logging Interceptor
+import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest } from '@angular/common/http';
+
+@Injectable()
+export class LoggingInterceptor implements HttpInterceptor {
+
+  // diese Funktion ist der Kern eines Interceptors
+  intercept(
+    request: HttpRequest<any>,    // request liegt als Observable vor
+    next: HttpHandler             // nächster Handler in der pipeline
+  ): Observable<HttpEvent<any>> {
+
+    console.log('request: ', request);
+
+        const response$ = next.handle(request);
+
+    return next.handle(request)
+              .pipe(
+                tap(
+                  event => console.log('response success:', event),
+                  event => console.errer('response error: ', error)
+                )
+              );
+  }
+}
+```
+
+Interceptoren werden in dem Modul registriert, in dem auch das HttpClientModule importiert wird.   
+In der Regel ist es das AppModule.
+```typescript
+// Interceptor einbinden
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { LoggingInterceptor } from './logging-interceptor';
+
+@NgModule({
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LoggingInterceptor,
+      multi: true
+    }
+  ]
+})
+export class AppModule { }
+```

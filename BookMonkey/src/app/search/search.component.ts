@@ -20,7 +20,7 @@ export class SearchComponent implements OnInit {
     this.keyUp$
     .pipe(
       debounceTime(500),
-      distinctUntilChanged(), //nur abschicken, wenn sich neuer searchTerm vom alten unterscheidet
+      distinctUntilChanged(), // nur abschicken, wenn sich neuer searchTerm vom alten unterscheidet
       filter(searchTerm => searchTerm.length > 3),
       tap(() => this.isLoading = true),
       switchMap(searchTerm => this.bookStoreService.getAllSearch(searchTerm)),
