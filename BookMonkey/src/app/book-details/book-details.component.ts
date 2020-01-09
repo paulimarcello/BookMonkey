@@ -30,7 +30,7 @@ export class BookDetailsComponent implements OnInit {
 
   private ladeBuch(isbn: string, callback: (book: Book) => void): void {
     this.bookStoreService
-      .getByIsbn(isbn)
+      .getSingle(isbn)
       .subscribe(callback);
   }
 
