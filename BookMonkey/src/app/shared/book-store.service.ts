@@ -53,6 +53,17 @@ export class BookStoreService {
     return this.http.delete(`${this.api}/book/${isbn}`, { responseType: 'text' });
   }
 
+  create(book: Book): Observable<any> {
+    return this.http.post(
+      `${this.api}/book`,
+      book,
+      { responseType: 'text' }
+    ).pipe(
+      retry(3),
+      catchError(this.errorHandler)
+    );
+  }
+
   private errorHandler(error: HttpErrorResponse): Observable<any> {
     console.error(error);
     return throwError(error);

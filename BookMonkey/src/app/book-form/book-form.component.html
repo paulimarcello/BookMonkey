@@ -1,0 +1,48 @@
+<form class="ui form" #bookForm="ngForm" (ngSubmit)="speichern()">
+
+  <div class="field">
+    <label>Buchtitel</label>
+    <input type="text" name="title" [(ngModel)]="book.title" required>
+  </div>
+
+  <div class="field">
+    <label>Untertitel</label>
+    <input type="text" name="subtitle" [(ngModel)]="book.subtitle">
+  </div>
+
+  <div class="field">
+    <label>ISBN</label>
+    <input type="text" name="isbn" [(ngModel)]="book.isbn" required minlength="10" maxlength="13">
+  </div>
+
+  <div class="field">
+    <label>Erscheinungsdatum</label>
+    <input type="date" name="published" [(ngModel)]="book.published" useValueAsDate required>
+  </div>
+
+  <div class="field">
+    <label>Autor</label>
+    <input type="text" name="authors" [(ngModel)]="book.authors[0]" required>
+  </div>
+
+  <div class="ui form">
+    <div class="field">
+      <label>Beschreibung</label>
+      <textarea name="description" [(ngModel)]="book.description"></textarea>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Bild</label>
+    <div class="two fields">
+      <div class="field">
+        <input type="text" name="thumbnail[url]" placeholder="URL" [(ngModel)]="book.thumbnails[0].url">
+      </div>
+      <div class="field">
+        <input type="text" name="thumbnail[title]" placeholder="Titel" [(ngModel)]="book.thumbnails[0].title">
+      </div>
+    </div>
+  </div>
+
+  <button class="ui button" type="submit" [disabled]="bookForm.invalid" >Speichern</button>
+</form>

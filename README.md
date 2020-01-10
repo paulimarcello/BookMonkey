@@ -8,6 +8,8 @@ ng g s shared/book-store
 ng g i shared/book-raw
 ng g class shared/book-factory
 ng g class shared/token-interceptor
+ng g c book-form
+ng g c create-book
 ```
 
 ## schlankes semantic ui installieren (nur css)   
@@ -2131,3 +2133,11 @@ export class MyComponent {
 
 <span style="color:red">__! ! !__</span>   
 __Das NgForm-Objekt kann für viele weitere Zwecke verwendet werden, da es immer _alle_ Zustände seiner Formularelemente kennt (z.B. für komplexe Validierungsregeln).__
+
+## date value accessor
+Der direkte Zugriff auf ein Date-Objekt mit ngModel funktioniert leider nicht.   
+Abhilfe schafft ein zusätzlich zu installierendes Paket:
+```bash
+npm i --save angular-date-value-accessor
+```
+Dieses muss dann entsprechend wieder im Modul eingebunden werden.
