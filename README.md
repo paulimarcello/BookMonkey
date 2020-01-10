@@ -2131,7 +2131,7 @@ export class MyComponent {
 }
 ```
 
-<span style="color:red">__! ! !__</span>   
+__! ! !__   
 __Das NgForm-Objekt kann für viele weitere Zwecke verwendet werden, da es immer _alle_ Zustände seiner Formularelemente kennt (z.B. für komplexe Validierungsregeln).__
 
 ## date value accessor
@@ -2141,3 +2141,311 @@ Abhilfe schafft ein zusätzlich zu installierendes Paket:
 npm i --save angular-date-value-accessor
 ```
 Dieses muss dann entsprechend wieder im Modul eingebunden werden.
+
+---
+
+## Reactive Forms
+Die Grundidee von ReactiveForms ist, dass nicht nur die reinen Formulardaten in der Component sind, sondern alle FormsControls mit ihren Zuständen, Validierungsregeln und Werten.   
+Um eine Formularstruktur aufzubauen stehen 3 Klassen zur Verfügung:
+- FormControl
+- FormGroup
+- FormArray
+
+#### FormControl
+Jedes Formularfeld wird durch eine FormControl repräsentiert. Man kann bei der Initilaisierung einen Startwert angeben, ansonsten ist dieser null.
+```typescript
+new FormControl();
+newFormControl('Startwert');
+```
+
+#### FormGroup
+! Controls in einem Objekt zusammenfassen   
+Quasi ein Container zum Zusammenfassen von FormControls. Ein Formular _sollte_ auf oberster Ebene _immer_ aus einer FormGroup bestehen.   
+Die Hineingereichten FormControls bekommen einen Namen zur Identifizierung.   
+Um eine Hierarchie aufzubauen kann man in einer FormGroup auf weitere FormGroups einbetten.   
+Die Blätter dieses Baums sind allerdings _immer_ FormControls.
+```typescript
+new FormGroup({
+    username: new FormControl(''),
+    name: new FormGroup({
+        firstname: new FormControl(''),
+        lastname: new FormControl('')
+    })
+});
+```
+
+#### FormArray
+! Controls in einem Array zusammenfassen   
+```typescript
+new FormArray([
+    new FormControl(''),
+    new FormControl(''),
+    new FormGroup([
+        new FormControl(''),
+        new FormControl('')
+    ]),
+    new FormArray([
+        new FormControl(''),
+        new FormControl('')
+    ])
+])
+```
+
+### FormsModule einbinden
+Um reactive Forms nutzen zu können muss das ReactiveFormsModule importiert werden.
+```typescript
+import { ReactiveFormsModule } from '@angular/forms';
+
+@NgModule({
+    imports: [
+        ReactiveFormsModule
+    ]
+})
+export class AppModule { }
+```
+
+### Komplexes Formularmodell
+```typescript
+@Component({/* ... */})
+export class MyFormConponent implements OnInit {
+    myForm: FormGroup;
+
+    ngOnInit() {
+        this.myForm = new FormGroup({
+            username: new FormControl(''),
+            password: new FormControl(''),
+
+            name: new FormGroup({
+                firstname: new FormControl(''),
+                lastname: new FormControl('')
+            }),
+
+            email: new FormArray([
+                new FormControl(''),
+                new FormControl(''),
+                new FormControl('')
+            ])
+        });
+    }
+}
+```
+
+### Template mit dem Modell verknüpfen
+! ! ! Die Hierarchie der FormGroup entspricht der Hierarchie im Template ! ! !   
+
+Formular mit dem Modell verknüpfen
+```html
+<form [formGroup]="myForm">
+    <!-- -->
+</form>
+```
+
+Formularfelder mit formControlName an FormControls knüfen
+```html
+<form [formGroup]="myForm">
+    <label>Benutzername</label>
+    <input formControlName="username" type="text">
+
+    <label>Passwort</label>
+    <input formControlName="password" type="password">
+    <!-- -->
+</form>
+```
+
+Mehrere Formularfelder mit formGroupName   
+formGroupName muss auf ein umschließendes Element angewandt werden, z.B. fieldset.
+```html
+<form [formGroup]="myForm">
+    <!-- -->
+
+    <fieldset formGroupName="name">
+        <label>Vorname</label>
+        <input formControlName="firstname" type="text">
+
+        <label>Nachname</label>
+        <input formControlName="lastname" type="text">
+    </fieldset>
+
+    <!-- -->
+</form>
+```
+
+formArrayName - schön dynamisch bleiben   
+```html
+<form [formGroup]="myForm">
+    <fieldset formArrayName="email">
+        <label>Email-Adressen</label>
+        <input 
+            type="text"
+            *ngFor="let control of myForm.get('email').controls; index as i"
+            [formControlName]="i">
+    </fieldset>
+</form>
+```
+
+### Formularzustand überwachen
+Man benötigt wieder direkten Zugriff auf die FormControls. Da das Formularmodell nun aber direkt in der Component definiert ist, ist kein zusätzlicher Codeaufwand nötig.   
+Man kan also direkt aus dem Template und der Component mit den Controls interagieren.   
+Bei formArray -> at(n)   
+Bei formGroup -> get('key')
+```html
+<form [formGroup]="myForm">
+    <label>Benutzername</label>
+    <input formControlName="username" type="text">
+
+    <div *ngIf="myForm.get('username').untouched">
+        Das Feld ist unberührt.
+    </div>
+    <!-- -->
+</form>
+```
+
+### Validatoren nutzen
+Die Validatoren müssen in der Component importiert werden
+```typescript
+import { Validators } from '@angular/forms';
+
+@Component({/* ... */})
+export class MyFormConponent implements OnInit {
+    myForm: FormGroup;
+    // ...
+}
+```
+
+Validatoren werden als 2. Argument in new FormControl(...) hineingegeben. Die Validatoren werden in der entsprechenden Reihenfolge ausgeführt.
+```typescript
+import { Validators } from '@angular/forms';
+
+@Component({/* ... */})
+export class MyFormConponent implements OnInit {
+    myForm: FormGroup;
+
+    ngOnInit() {
+        this.myForm = new FormGroup({
+            username: new FormControl(''),
+            password: new FormControl('', [Validators.required, Validators.minLenmgth(6)]),
+
+            name: new FormGroup({
+                firstname: new FormControl(''),
+                lastname: new FormControl('')
+            }),
+
+            email: new FormArray([
+                new FormControl('', Validators.email),
+                new FormControl(''),
+                new FormControl('')
+            ])
+        });
+    }
+}
+```
+
+### Formular abschicken
+```html
+<form [formGroup]="myForm" (ngSubmit)="submitForm()">
+    <!-- -->
+
+    <button type="submit">Register</button>
+</form>
+```
+
+```typescript
+@Component(/* ... */)
+export class MyFormComponent {
+    //
+    submitForm() {
+        console.log(this.myForm.value);
+    }
+}
+```
+
+### Formular zurücksetzen
+```typescript
+@Component(/* ... */)
+export class MyFormComponent {
+    // ...
+    submitForm() {
+        // ...
+        this.myForm.reset();
+    }
+}
+```
+
+### Formularwerte setzen
+Mit ReactiveForms haben wir _nur_ Zugriff auf das Formularmodell, nicht direkt auf die Daten. Diese sind in den FormControls verankert.   
+Um an die Werte zu kommen gibt es 2 Helper-Funktionen:
+- setValue()    -> damit kann man die Werte des gesamten Formular neu setzen
+- patchValue()  -> für einzelne Felder
+
+```typescript
+const myForm = new FormGroup({
+    username: new FormControl(''),
+    password: new FormControl('')
+});
+
+myForm.setValue({
+    username: 'Marcello',
+    password: 'secret'
+});
+
+myForm.patchValue({
+    username: 'Inge'
+});
+
+// Fehler, da Struktur nicht vollständig!
+myForm.setValue({
+    username: 'Inge'
+});
+```
+
+### Formbuilder
+Um die Initialisierung von Formularen zu verinfachen kann man den FormBuilder nutzen.   
+Die Änderungen bei Verwendung beziehen sich rein auf die Component, das Template kann erhalten bleiben.   
+Der FormBuilder wird in die Component injiziert, z.B. über ein Property.
+
+```typescript
+import { Formbuilder } from '@angular/forms';
+
+@Component({/* ... */})
+export class MyFormComponent implements OnInit {
+    myForm: FormGroup;
+
+    constructor(private fb: FormBuilder) {}
+
+    ngOnInit() {
+        this.myForm = this.fb.group({
+            username: ['', Validators.required],
+            password: '',
+            name: this.fb.group({
+                firstname: '',
+                lastname: ''
+            }),
+            email: this.fb.array(['', '', ''])
+        })
+    }
+}
+```
+
+### Änderungen überwachen
+Jedes FormControl, FormGroup und FormArray beseitzt zwei reaktive Properties:
+- valueChanges
+- statusChanges
+Dahinter verbergen sich Observables, welche man entsprechend subscriben kann.   
+Damit lassen sich komplexere UseCases reaktiv abbilden.
+
+```typescript
+// Formularwerte ausgeben
+this.myForm
+    .valueChanges
+    .subscribe(groupValue => console.log(groupValue));
+
+// Http-Request für jede Eingabe triggern
+this.myForm
+    .get('username')
+    .valueChanges
+    .pipe(
+        debounceTime(300),
+        switchMap(username => this.service.getUser(username))
+    )
+    .subscribe(user => console.log(user));
+```
