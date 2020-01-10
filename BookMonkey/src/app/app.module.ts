@@ -14,6 +14,7 @@ import { SearchComponent } from './search/search.component';
 import { TokenInterceptor } from './shared/token-interceptor';
 import { CreateBookComponent } from './create-book/create-book.component';
 import { BookFormComponent } from './book-form/book-form.component';
+import { FormMessagesComponent } from './form-messages/form-messages.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { BookFormComponent } from './book-form/book-form.component';
     HomeComponent,
     SearchComponent,
     CreateBookComponent,
-    BookFormComponent
+    BookFormComponent,
+    FormMessagesComponent
   ],
   imports: [
     BrowserModule,

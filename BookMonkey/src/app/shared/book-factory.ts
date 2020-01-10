@@ -11,7 +11,7 @@ export abstract class BookFactory {
       isbn: '',
       title: '',
       authors: [],
-      published: new Date(Date.now()),
+      published: new Date(),
       subtitle: '',
       rating: 0,
       thumbnails: [{
