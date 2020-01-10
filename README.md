@@ -2131,5 +2131,3 @@ export class MyComponent {
 
 <span style="color:red">__! ! !__</span>   
 __Das NgForm-Objekt kann für viele weitere Zwecke verwendet werden, da es immer _alle_ Zustände seiner Formularelemente kennt (z.B. für komplexe Validierungsregeln).__
- 
- 
