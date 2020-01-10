@@ -1967,3 +1967,167 @@ import { LoggingInterceptor } from './logging-interceptor';
 })
 export class AppModule { }
 ```
+
+---
+
+## Template driven Forms
+Hierbei bindet sich an Inputfelder, Checkboxen etc. Die Daten aus den Formularen werden automatisch mit den Daten in der Component synchronisiert.   
+
+### FormsModule einbinden
+Um Template driven Forms nutzen zu können muss das FormsModule in der App importiert werden.
+
+```typescript
+import { FormsModule } from '@angular/forms';
+
+@NgModule({
+    imports: [
+        FormsModule
+    ]
+})
+export class AppModule { }
+```
+
+### Datenmodell in der Component
+Die zu verarbeitenden Daten sollten in der Component als _ein_ zusammenhängendes Objekt vorliegen.
+
+```typescript
+@Component( /* ... */)
+export class MyComponent {
+    formData = {
+        username: '',
+        passwort: ''
+    }
+}
+```
+
+### Template mit 2-Way Binding
+Jedes Formularfeld sollte ein name-Attribut besitzen, damit Angular die Felder identifizieren kann.   
+Ferner ist ein Submit-Button nötig.   
+
+Gibt der Benutzer etwas ein, so wird über dein Event das Datum an die Component übertragen.   
+Über das Property-Binding können wir aus der Component Daten an die Form binden.
+```html
+<form>
+    <label>Benutzername</label>
+    <input type="text" name="username" [(ngModel)="formData.username"]>
+
+    <label>Passwort</label>
+    <input type="password" name="passwort" [(ngModel)="formData.password"]>
+
+    <button type="submit">Login</button>
+</form>
+```
+
+### Formularzustand verarbeiten
+Für jedes Formularelement wurde die Direktive ngModel verwendet.   
+Dabei wird automatisch für jedes Element ein FormControl initialisiert.   
+Angular kontrolliert über das FormControl den Zustand des jeweiligen Elements und bietet uns über das FormControll eine Schnittstelle, um mit diesem Zustand arbeiten zu können.   
+Ein FormControl kann 6 Zustände haben:
+| Status    | CSS-Klasse    | Beschreibung
+|-----------|---------------|-
+| dirty     | ng-dirty      | Wert wurde bearbeitet
+| pristine  | ng-pristine   | Wert ist unberührt
+| valid     | ng-valid      | Wert ist gültig
+| invalid   | ng-invalid    | Wert ist ungültig
+| touched   | ng-touched    | Control wurde verwendet / bedient
+| untouched | ng-untouched  | Control wurde noch nicht verwendet
+
+Die CSS-Klassen lassen sich nutzen, um den Elemente passend zum Zustand zu stylen.   
+Für komplexere Reaktionen kann auch direkt auf das FormControl zugegriffen werden. Dazu muss man im Template eine Elementreferenz einbauen, die auf ngModel verweist.
+```html
+<form>
+    <label>Benutzername</label>
+    <input type="text" name="username" [(ngModel)="formData.username"] #usernameInput="ngModel">
+
+    <div *ngIf="usernameInput.untouched">
+        Feld ist unberührt.
+    </div>
+
+    <!-- -->
+</form>
+```
+
+### Eingaben validieren
+Bereits in Angular eingebaute Validatoren werden als Attribute auf den Formularfeldern gesetzt. Auf jedem Element können mehrere Validatoren hinterlegt werden.   
+Bereits eingebaut sind
+| Attribut      | Prüfung
+|-------------------|-
+| required          | Feld muss ausgefüllt sein
+| requiredTrue      | muss true sein
+| minlength="6"     | min. 6 Zeichen
+| maxlength="8"     | max. 8 Zeichen
+| pattern="[a-z]"   | überprüft auf RegEx. Hier, nur Kleinbuchstaben von a-z
+| email             | gültige Email-Adresse
+
+```html
+<form>
+    <!-- -->
+
+    <label>Passwort</label>
+    <input  type="password"
+            name="passwort"
+            [(ngModel)="formData.password"]
+            required
+            minlength="8"
+            pattern=".*\d.*"> <!-- muss eine Zahl enthalten -->
+
+    <button type="submit">Login</button>
+</form>
+```
+
+### Formular abschicken
+Hier benötigt man zunächst eine Funktion in der Component, die aufgerufen wird.   
+Die Daten aus dem Formular liegen bereits durch das 2-Way Binding in der Component vor.
+
+```typescript
+@Component({/* ... */})
+export class MyComponent {
+    formData = { /* ... */}
+
+    submitForm() {
+        console.log(this.formData);
+    }
+}
+```
+
+Im Template müssen wir dann das Formular mit der Funktion verknüpfen. Dazu binden wir an das Event ngSubmit.
+```html
+<form (ngSubmit="submitForm()")>
+    <!-- -->
+
+    <button type="submit">Login</button>
+</form>
+```
+
+### Formular reset - mit dem Decorator @ViewChild
+Angular initialisiert vollautomatisch für jedes <form> Element eine Direktive namens NgForm.   
+Zugriff auf dieses NgForm erhalten wir wieder über eine Elementreferenz, die diesmal jedoch auf ngForm verweist.
+<form #myForm="ngForm">
+    <!-- -->
+
+    <button type="submit">Login</button>
+</form>
+```
+Auf diesem Objekt existiert u.a. die Funktion reset().   
+Damit wird aus der Component heraus Zugriff auf diese Elementreferenz (im Template) erhalten, benötigt man den Decoreator @ViewChild.   
+Das Argument für den Decorator ist der Name der Elementreferenz.
+
+```typescript
+@Component({/* ... */})
+export class MyComponent {
+    //                           .- Typ des Elements, dass wir referenzieren
+    @ViewChild('myForm') myForm: NgForm;
+    formData = { /* ... */}
+
+    submitForm() {
+        console.log(this.formData);
+
+        // ...
+
+        this.myForm.reset();
+    }
+}
+```
+
+<span style="color:red">__! ! !__</span>   
+__Das NgForm-Objekt kann für viele weitere Zwecke verwendet werden, da es immer _alle_ Zustände seiner Formularelemente kennt (z.B. für komplexe Validierungsregeln).__
