@@ -1,6 +1,6 @@
 import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
-import {FormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { DateValueAccessorModule } from 'angular-date-value-accessor';
 
 import {AppRoutingModule} from './app-routing.module';
@@ -33,7 +33,8 @@ import { FormMessagesComponent } from './form-messages/form-messages.component';
     AppRoutingModule,
     HttpClientModule,
     FormsModule,
-    DateValueAccessorModule
+    DateValueAccessorModule,
+    ReactiveFormsModule
   ],
   providers: [
     {
