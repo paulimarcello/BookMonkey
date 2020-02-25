@@ -1,3 +1,10 @@
+## Angular Version auswählen
+Welche Angular-Version mit ng new xxx für eine App genutzt wird ist von der Version der Angular-cli abhängig.   
+Gerade wenn man 3rd party-libs nutzen möchten (z.B. ngrx) ist darauf zu achten.   
+Man kan für ein Projekt eine bestimmte Angular-cli "installieren".   
+npm install @angular/cli@1.7.x für angular 5.   
+Versionen findet man auf npm: https://www.npmjs.com/package/@angular/cli
+
 ## _init project_   
 ```bash
 ng new BookMonkey -p bm #-p for prefix
